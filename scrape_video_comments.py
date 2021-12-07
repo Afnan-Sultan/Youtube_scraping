@@ -78,9 +78,9 @@ for vid_id in videos_url:
     all_comments.append(comments
     
     #this will output the comments for each video to an excel file named by the vidoes title
-    writer = pd.ExcelWriter("".join([vid_id[0],'.xlsx']), engine='xlsxwriter')
+    writer = pd.ExcelWriter("".join([vid_id[0],'_comments.xlsx']), engine='xlsxwriter')
     comments.to_excel(writer, index=False)
     writer.save() 
                         
     #uncomment the following line to save the files as tab seperated files
-    #comments.to_csv("".join([vid_id[0],'.tsv']), sep='\t', index=False)
+    #comments.to_csv("".join([vid_id[0],'_comments.tsv']), sep='\t', index=False)
