@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov 29 16:55:34 2021
-
 @author: Afnan Sultan
 """
 
