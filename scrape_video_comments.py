@@ -4,79 +4,83 @@
 """
 
 #make sure to download the following libraries in advance
-import pandas as pd # helpful dataframe library
-import googleapiclient.discovery    #Google API service
-import re
+import pandas as pd                 # helpful dataframe library
+import googleapiclient.discovery    # Google API service, usefull for all Google services
+import re                           # regular expression library to clean text
 
-
+#read a list of videos info. The code for extracting this list is in the 'scrape_video_transcript.py' file
 df = pd.read_csv('Videos_info.csv')
+
+#extract the two columns that are relevant to this task (the tilte, for naming the output file, and the video ID, for scraping the comments)
 videos_url = df[['Title', 'ID']].values.tolist()
 
 def request_comments(video_id):
-    #print(title)
-    #fOut = open("".join([video_id[0], "_comments.tsv"]), 'w', encoding='utf-8')
-    #fOut.write("Name\tTime\tComment\rReply by\tReply time\tReply\n")
-    #fOut.write("Name\tTime\tComment\n")
-    youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = "")
+    '''
+    This function take an input a list of tuples (video name and video ID). It passed the ID to google API and retrieves all the top-level comments on a videe,
+    excluding the replies. 
+    '''
+    
+    #Identify the Google service and the version used. Here, it's youtube.v3
+    #You need to replace '$your key' with the API key that you creat through your google account. Here is a link to learn more 
+    #https://developers.google.com/youtube/v3/getting-started
+    youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = "$your key")
+    
+    #this will be as an analogy to scrolling down to load the next set of comments
     nextPageToken = None
+    
+    #this is where we will store our data for visualisation when needed
     info = []
+    
+    #The loop will continue as long as 'nextPageToken' is not empty (i.e. untill all comments are retrieved)
     while(1):
+        #calling the commentThread function with parameters snippets (i.e comments), load up to 100 comment per page token, video ID and the current page token. 
         request = youtube.commentThreads().list(
         part="snippet,replies",
         maxResults=100,  #prettyPrint = False,
         videoId = video_id[1],
         pageToken = nextPageToken
         )
+        
+        #calling excute function to convert the request object to a response object that we can iterate over
         res = request.execute()
+        
+        #get the next page token for the current page,  if available
         nextPageToken = res.get('nextPageToken', None)
 
-        #for key in res.keys():
+        #Identifying the number of comments to iterate over and extract the relevant info
         ncoms =len(res['items'])
         for i in range(0,ncoms):
-            com = (res['items'][i]['snippet']['topLevelComment']['snippet']['textOriginal'])#.replace('\n', ' ').replace('\t', ' ')
+            
+            #this is the path for the fields Comment, date of comment, auther of the comment and number of liked per comment
+            com = (res['items'][i]['snippet']['topLevelComment']['snippet']['textOriginal'])
+            
+            #we remove any white spaces (i.e. tabs, new lines) from the comment to avoid problems during outputing to different formats
             clean_com = re.sub('\s+',' ',com)
+            
             pubat = (res['items'][i]['snippet']['topLevelComment']['snippet']['publishedAt'])
             auth = (res['items'][i]['snippet']['topLevelComment']['snippet']['authorDisplayName'])
             like = (res['items'][i]['snippet']['topLevelComment']['snippet']['likeCount'])
-            #output = "\t".join([auth, pubat, clean_com, '\n'])
-            #info.append([auth, pubat, like, clean_com])
+            
+            #store the comment to our list
             info.append([auth, pubat, like, clean_com, "", "", ""])
-            #fOut.write(output)
-
-            if(res['items'][i]['snippet']['totalReplyCount']) > 0:
-                parent = res['items'][i]['snippet']['topLevelComment']['id']
-                nextPageTokenRep = None
-                while(1):
-                   request2 = youtube.comments().list(
-                       part = 'snippet', 
-                       id = video_id[1], 
-                       #maxResults = 100, 
-                       pageToken = nextPageTokenRep,
-                       parentId = parent)
-                   data2 = request2.execute()
-                   nextPageTokenRep = data2.get('nextPageTokenRep');
-                   nreplies = len(data2['items'])
-                   for j in range(nreplies, -1, -1):
-                       rpauth = data2['items'][j]['snippet']['authorDisplayName']
-                       rpcom = data2['items'][j]['snippet']['textDisplay']
-                       rppubat = data2['items'][j]['snippet']['publishedAt']
-                       #data2.items[i].snippet.updatedAt]);
-                       #fOut.write("\t".join(['\t\t',rpauth, rpcom, rppubat, '\n' ]))
-                       info.append(["", "", "", "", rpauth, rppubat, rpcom])
-                   if (nextPageTokenRep =="" or nextPageTokenRep == None):
-                       break
-                 
+        
+        #when the nextPageToken is empty, the loop will break and the function will return the comments
         if (nextPageToken =="" or nextPageToken == None):
                 break
 
     return(info)
 
+#this variable will store all the comments for all the videos we pass to the function
 all_comments = []
-for vid_id in videos_url[0]:
+for vid_id in videos_url:
+    #we call our 'request_comments' function and convert the returned list to a pandas dataframe. Which will be easier to visualize and write to a file.
     comments = pd.DataFrame(request_comments(vid_id), columns = ['Name', 'Time', 'Likes', 'Comment'])
-    all_comments.append(comments)
-    #comments.to_csv("".join([vid_id[0],'.tsv']), sep='\t', index=False)
+    all_comments.append(comments
     
+    #this will output the comments for each video to an excel file named by the vidoes title
     writer = pd.ExcelWriter("".join([vid_id[0],'.xlsx']), engine='xlsxwriter')
-    #comments.to_excel(writer, index=False)
-    #writer.save() 
+    comments.to_excel(writer, index=False)
+    writer.save() 
+                        
+    #uncomment the following line to save the files as tab seperated files
+    #comments.to_csv("".join([vid_id[0],'.tsv']), sep='\t', index=False)
