@@ -1,5 +1,11 @@
-import pandas as pd
-import googleapiclient.discovery
+# -*- coding: utf-8 -*-
+"""
+@author: Afnan Sultan
+"""
+
+#make sure to download the following libraries in advance
+import pandas as pd # helpful dataframe library
+import googleapiclient.discovery    #Google API service
 import re
 
 
@@ -11,7 +17,7 @@ def request_comments(video_id):
     #fOut = open("".join([video_id[0], "_comments.tsv"]), 'w', encoding='utf-8')
     #fOut.write("Name\tTime\tComment\rReply by\tReply time\tReply\n")
     #fOut.write("Name\tTime\tComment\n")
-    youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = "AIzaSyBQIuTIfVJQBrnB8ZPC5yyjVYknQ0Bb548")
+    youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = "")
     nextPageToken = None
     info = []
     while(1):
