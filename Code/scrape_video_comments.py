@@ -9,6 +9,7 @@ import googleapiclient.discovery    # Google API service, usefull for all Google
 import re                           # regular expression library to clean text
 
 #read a list of videos info. The code for extracting this list is in the 'scrape_video_transcript.py' file
+#we only care about the 'title' and 'ID' columns, So, if you have you own list that contains these two info, then pass it directly
 df = pd.read_csv('Videos_info.csv')
 
 #extract the two columns that are relevant to this task (the tilte, for naming the output file, and the video ID, for scraping the comments)
@@ -16,8 +17,8 @@ videos_url = df[['Title', 'ID']].values.tolist()
 
 def request_comments(video_id):
     '''
-    This function take an input a list of tuples (video name and video ID). It passed the ID to google API and retrieves all the top-level comments on a videe,
-    excluding the replies. 
+    This function takes a tuple (video name and video ID) as input. It passes the ID to google API and retrieves all the top-level comments on a videe,
+    excluding the replies on the comments. It returns another tuple (video name, list of comments). 
     '''
     
     #Identify the Google service and the version used. Here, it's youtube.v3
@@ -70,7 +71,11 @@ def request_comments(video_id):
 
     return(info)
 
-#this variable will store all the comments for all the videos we pass to the function
+#the next piece is for retrieving comments for multiple videos and writing them to a file. 
+#If you are intrested in getting comments for one video only, then, simply call the function on your video tuple diredtly
+#e.g. comments = request_comments(['video_name', 'Video_ID']), then convert it to dataframe and write it to a file the same way as mentioned below
+
+#this variable will store all the comments for all the videos we pass to the function (to navigate through in the IDE if you want)
 all_comments = []
 for vid_id in videos_url:
     #we call our 'request_comments' function and convert the returned list to a pandas dataframe. Which will be easier to visualize and write to a file.
