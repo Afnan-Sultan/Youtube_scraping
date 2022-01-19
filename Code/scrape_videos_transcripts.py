@@ -48,6 +48,7 @@ for video_dict in playd['entries']:
             # this path leads to the most readable and preprocessed link
             # since this channel is in english, the uploaded subtitles has a key set to 'en-US'. this setting maybe change accordingly
             subtitle = video_dict['subtitles']['en-US'][4]['url'] 
+            cc = "manual"
         else:
             # For automatic CCs, this path leads to the best xml link to be easily parsed afterwards. 
             # For extracting transcripts for other languages, replace 'en'-which stands for english- with the appropriate abbreviation of that other language.
@@ -117,7 +118,7 @@ for video in relevant_info:
         transcripts.append([clean_title,transcript]) # adding the title and transcript to our list variable
         
         # after looping over all the time stamps, we will write the full transcript to a file 
-        # the file's name is the same as the the video name, alongside a prefix that tells if CC is automatic, and language of the automation
-        fOut = open("".join([cc,clean_title,".txt"]), 'w', encoding='utf-8') 
+        # the file's name is the same as the the video name, alongside a prefix that tells if CC is automatic
+        fOut = open("".join([cc, "_", clean_title,".txt"]), 'w', encoding='utf-8') 
         fOut.write(transcript)
         fOut.close()
